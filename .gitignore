@@ -1,3 +1,5 @@
 # received files
 *.log
 received_fies/*
+
+__pycache__/*
