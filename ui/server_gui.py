@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from server.server_backend import FileServer
+from ui.fonts import FontSizeDialog
 
 class ServerGUI(QMainWindow):
     def __init__(self):
@@ -58,6 +59,12 @@ class ServerGUI(QMainWindow):
         exit_action = QAction('退出', self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+        
+        # 添加字体调整选项
+        settings_menu = menubar.addMenu('设置')
+        font_action = QAction('调整字体大小', self)
+        font_action.triggered.connect(self.open_font_size_dialog)
+        settings_menu.addAction(font_action)
 
         # 主题选择菜单
         theme_menu = menubar.addMenu('主题')
@@ -121,4 +128,12 @@ class ServerGUI(QMainWindow):
         """)
         self.status_bar.showMessage('已切换到暗黑主题')
 
+    def open_font_size_dialog(self):
+        """打开字体大小调整对话框"""
+        font_dialog = FontSizeDialog(self)
+        font_dialog.exec_()
 
+    def set_font_size(self, size):
+        """设置整个应用的字体大小"""
+        self.current_font_size = size
+        self.setStyleSheet(f"* {{ font-size: {size}px; }}")
