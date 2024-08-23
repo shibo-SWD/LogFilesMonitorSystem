@@ -87,7 +87,7 @@ import threading
 import os
 
 class FileServer:
-    def __init__(self, host='0.0.0.0', port=12345, save_dir='./received_files'):
+    def __init__(self, host='0.0.0.0', port=12345, save_dir='./data/received_files'):
         self.host = host
         self.port = port
         self.save_dir = save_dir

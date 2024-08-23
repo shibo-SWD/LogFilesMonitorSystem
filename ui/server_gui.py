@@ -2,7 +2,7 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QLabel, 
-    QTextEdit, QStatusBar, QAction, QMenuBar
+    QTextEdit, QStatusBar, QAction, QMenuBar, QLineEdit
 )
 from PyQt5.QtCore import Qt
 from server.server_backend import FileServer
@@ -28,10 +28,11 @@ class ServerGUI(QMainWindow):
         self.status_label = QLabel('服务器未启动')
         layout.addWidget(self.status_label)
 
-        # 日志显示区域
-        self.log_text = QTextEdit()
-        self.log_text.setReadOnly(True)
-        layout.addWidget(self.log_text)
+        # 日志保存地址输入框
+        self.save_dir_input = QLineEdit(self)
+        self.save_dir_input.setText('./data/receive_files')
+        layout.addWidget(QLabel('监控日志保存地址:'))
+        layout.addWidget(self.save_dir_input)
 
         # 启动和关闭按钮
         self.start_button = QPushButton('启动服务器')
@@ -42,6 +43,12 @@ class ServerGUI(QMainWindow):
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_server)
         layout.addWidget(self.stop_button)
+
+
+        # 日志显示区域
+        self.log_text = QTextEdit()
+        self.log_text.setReadOnly(True)
+        layout.addWidget(self.log_text)
 
         central_widget.setLayout(layout)
 
@@ -59,7 +66,7 @@ class ServerGUI(QMainWindow):
         exit_action = QAction('退出', self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
-        
+
         # 添加字体调整选项
         settings_menu = menubar.addMenu('设置')
         font_action = QAction('调整字体大小', self)
@@ -78,7 +85,7 @@ class ServerGUI(QMainWindow):
 
     def start_server(self):
         """启动服务器"""
-        self.file_server = FileServer()
+        self.file_server = FileServer(save_dir=self.save_dir_input)
         self.file_server.start()
         self.status_label.setText(f'服务器正在监听 IP: {self.file_server.host} 端口: {self.file_server.port}')
         self.status_bar.showMessage('服务器已启动')
