@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QTextEdit, QStatusBar, QAction, QMenuBar
 )
 from PyQt5.QtCore import Qt
-from server_backend import FileServer
+from server.server_backend import FileServer
 
 class ServerGUI(QMainWindow):
     def __init__(self):
@@ -121,11 +121,4 @@ class ServerGUI(QMainWindow):
         """)
         self.status_bar.showMessage('已切换到暗黑主题')
 
-def main():
-    app = QApplication(sys.argv)
-    gui = ServerGUI()
-    gui.show()
-    sys.exit(app.exec_())
 
-if __name__ == '__main__':
-    main()
