@@ -1,18 +1,32 @@
-# server_gui.py
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QLabel, 
     QTextEdit, QStatusBar, QAction, QMenuBar, QLineEdit
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, QObject
 from server.server_backend import FileServer
 from ui.fonts import FontSizeDialog
+import threading  # 导入线程库
+
+class Communicator(QObject):
+    # 定义信号
+    status_update = pyqtSignal(str)
+    log_update = pyqtSignal(str)
+    server_started = pyqtSignal()
+    server_stopped = pyqtSignal()
 
 class ServerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
         self.file_server = None
+        self.communicator = Communicator()
+
+        # 连接信号与槽
+        self.communicator.status_update.connect(self.update_status_label)
+        self.communicator.log_update.connect(self.update_log_text)
+        self.communicator.server_started.connect(self.on_server_started)
+        self.communicator.server_stopped.connect(self.on_server_stopped)
 
     def initUI(self):
         """初始化UI组件"""
@@ -30,7 +44,7 @@ class ServerGUI(QMainWindow):
 
         # 日志保存地址输入框
         self.save_dir_input = QLineEdit(self)
-        self.save_dir_input.setText('./data/receive_files')
+        self.save_dir_input.setText('./data/received_files')
         layout.addWidget(QLabel('监控日志保存地址:'))
         layout.addWidget(self.save_dir_input)
 
@@ -43,7 +57,6 @@ class ServerGUI(QMainWindow):
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_server)
         layout.addWidget(self.stop_button)
-
 
         # 日志显示区域
         self.log_text = QTextEdit()
@@ -85,23 +98,52 @@ class ServerGUI(QMainWindow):
 
     def start_server(self):
         """启动服务器"""
-        self.file_server = FileServer(save_dir=self.save_dir_input)
+        save_dir_path = self.save_dir_input.text()  # 获取输入框中的文本
+        
+        # 检查输入是否为空，提供一个默认值
+        if not save_dir_path:
+            save_dir_path = './data/received_files'
+
+        self.file_server = FileServer(save_dir=save_dir_path)
+
+        # 将服务器启动放在后台线程中，以免阻塞主线程
+        threading.Thread(target=self._start_server_in_thread, daemon=True).start()
+
+    def _start_server_in_thread(self):
+        """后台线程中启动服务器"""
         self.file_server.start()
-        self.status_label.setText(f'服务器正在监听 IP: {self.file_server.host} 端口: {self.file_server.port}')
-        self.status_bar.showMessage('服务器已启动')
-        self.log_text.append('服务器已启动...')
-        self.start_button.setEnabled(False)
-        self.stop_button.setEnabled(True)
+        # 通过信号更新 GUI
+        self.communicator.status_update.emit(f'服务器正在监听 IP: {self.file_server.host} 端口: {self.file_server.port}')
+        self.communicator.server_started.emit()
 
     def stop_server(self):
         """关闭服务器"""
         if self.file_server:
             self.file_server.stop()
-            self.status_label.setText('服务器已停止')
-            self.status_bar.showMessage('服务器已停止')
-            self.log_text.append('服务器已停止...')
-            self.start_button.setEnabled(True)
-            self.stop_button.setEnabled(False)
+            self.communicator.status_update.emit('服务器已停止')
+            self.communicator.server_stopped.emit()
+
+    def update_status_label(self, status_text):
+        """更新状态标签"""
+        self.status_label.setText(status_text)
+
+    def update_log_text(self, log_text):
+        """更新日志文本区域"""
+        self.log_text.append(log_text)
+
+    def on_server_started(self):
+        """服务器启动后的处理"""
+        self.status_bar.showMessage('服务器已启动')
+        self.start_button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+        self.communicator.log_update.emit('服务器已启动...')
+
+    def on_server_stopped(self):
+        """服务器停止后的处理"""
+        self.status_bar.showMessage('服务器已停止')
+        self.start_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
+        self.communicator.log_update.emit('服务器已停止...')
 
     def show_about(self):
         """显示关于信息"""
