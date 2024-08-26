@@ -1,3 +1,5 @@
+# server_gui.py
+
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QLabel, 
@@ -104,7 +106,7 @@ class ServerGUI(QMainWindow):
         if not save_dir_path:
             save_dir_path = './data/received_files'
 
-        self.file_server = FileServer(save_dir=save_dir_path)
+        self.file_server = FileServer(save_dir=save_dir_path, log_signal=self.communicator.log_update)
 
         # 将服务器启动放在后台线程中，以免阻塞主线程
         threading.Thread(target=self._start_server_in_thread, daemon=True).start()

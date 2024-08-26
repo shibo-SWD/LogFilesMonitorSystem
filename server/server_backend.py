@@ -1,9 +1,11 @@
+# server_backend.py
 import socket
 import threading
 import os
+import time
 
 class FileServer:
-    def __init__(self, host='0.0.0.0', port=12345, save_dir='./data/received_files'):
+    def __init__(self, host='0.0.0.0', port=12345, save_dir='./data/received_files', log_signal=None):
         self.host = host
         self.port = port
         self.save_dir = save_dir
@@ -11,6 +13,7 @@ class FileServer:
         self.client_lock = threading.Lock()
         self.server_socket = None
         self.is_running = False
+        self.log_signal = log_signal  # 添加 log_signal 参数
         os.makedirs(self.save_dir, exist_ok=True)
 
     def start(self):
@@ -127,12 +130,27 @@ class FileServer:
                             break
                         f.write(data)
                         received_size += len(data)
-                        print(f"Receiving file '{file_name}': {received_size}/{file_size} bytes")
+                        message = f"Receiving file '{file_name}': {received_size}/{file_size} bytes"
+                        print(message)
 
-                print(f"Received file '{file_name}' from {client_ip}")
+                        # # 使用日志信号发送更新到GUI
+                        # if self.log_signal:
+                        #     self.log_signal.emit(message)
+
+                completion_message = f"Received file '{file_name}' from {client_ip}"
+                print(completion_message)
+                
+                # 使用日志信号发送文件接收完成的消息到GUI
+                if self.log_signal:
+                    self.log_signal.emit(completion_message)
 
                 with self.client_lock:
                     self.clients[client_ip] += 1
 
         except Exception as e:
-            print(f"Error handling client {client_ip}: {e}")
+            error_message = f"Error handling client {client_ip}: {e}"
+            print(error_message)
+            
+            # 使用日志信号发送错误消息到GUI
+            if self.log_signal:
+                self.log_signal.emit(error_message)
