@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QObject
 from server.server_backend import FileServer
 from ui.fonts import FontSizeDialog
 import threading  # 导入线程库
+import socket
 
 class Communicator(QObject):
     # 定义信号
@@ -30,6 +31,19 @@ class ServerGUI(QMainWindow):
         self.communicator.log_update.connect(self.update_log_text)
         self.communicator.server_started.connect(self.on_server_started)
         self.communicator.server_stopped.connect(self.on_server_stopped)
+
+    def get_local_ip_address(self):
+        """获取本地 IP 地址"""
+        try:
+            # 创建一个套接字来查找本地 IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+        except Exception as e:
+            ip = "无法获取 IP"
+        return ip
+
     def initUI(self):
         """初始化UI组件"""
         self.setWindowTitle('文件监控服务端')
@@ -43,6 +57,13 @@ class ServerGUI(QMainWindow):
         # 状态显示
         self.status_label = QLabel('服务器未启动')
         layout.addWidget(self.status_label)
+
+        # 将 QLabel 改为 QLineEdit 显示 IP 地址并设置为只读
+        self.ip_line_edit = QLineEdit(self)
+        self.ip_line_edit.setText(self.get_local_ip_address())
+        self.ip_line_edit.setReadOnly(True)  # 设置为只读
+        layout.addWidget(QLabel('本地 IP 地址:'))
+        layout.addWidget(self.ip_line_edit)
 
         # 日志保存地址输入框
         self.save_dir_input = QLineEdit(self)
