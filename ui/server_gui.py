@@ -23,13 +23,13 @@ class ServerGUI(QMainWindow):
         self.initUI()
         self.file_server = None
         self.communicator = Communicator()
+        self.current_theme = 'light'  # 初始化为明亮主题
 
         # 连接信号与槽
         self.communicator.status_update.connect(self.update_status_label)
         self.communicator.log_update.connect(self.update_log_text)
         self.communicator.server_started.connect(self.on_server_started)
         self.communicator.server_stopped.connect(self.on_server_stopped)
-
     def initUI(self):
         """初始化UI组件"""
         self.setWindowTitle('文件监控服务端')
@@ -153,6 +153,7 @@ class ServerGUI(QMainWindow):
 
     def set_light_theme(self):
         """设置明亮主题"""
+        self.current_theme = 'light'  # 更新当前主题
         self.setStyleSheet("""
             QMainWindow {
                 background-color: white;
@@ -167,14 +168,43 @@ class ServerGUI(QMainWindow):
 
     def set_dark_theme(self):
         """设置暗黑主题"""
+        self.current_theme = 'dark'  # 更新当前主题
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #2e2e2e;
                 color: white;
             }
-            QLabel, QTextEdit, QPushButton {
+            QLabel, QTextEdit, QPushButton, QLineEdit {
                 background-color: #2e2e2e;
                 color: white;
+                border: 1px solid #444;
+            }
+            QMenuBar {
+                background-color: #2e2e2e;
+                color: white;
+            }
+            QMenuBar::item {
+                background-color: #2e2e2e;
+                color: white;
+            }
+            QMenuBar::item:selected {
+                background-color: #444;
+            }
+            QMenu {
+                background-color: #2e2e2e;
+                color: white;
+            }
+            QMenu::item:selected {
+                background-color: #444;
+            }
+            QDialog {
+                background-color: #2e2e2e;
+                color: white;
+            }
+            QDialog QLabel, QDialog QPushButton, QDialog QLineEdit {
+                background-color: #2e2e2e;
+                color: white;
+                border: 1px solid #444;
             }
         """)
         self.status_bar.showMessage('已切换到暗黑主题')
@@ -187,4 +217,61 @@ class ServerGUI(QMainWindow):
     def set_font_size(self, size):
         """设置整个应用的字体大小"""
         self.current_font_size = size
-        self.setStyleSheet(f"* {{ font-size: {size}px; }}")
+        # 根据当前主题设置字体大小
+        if self.current_theme == 'dark':
+            self.setStyleSheet(f"""
+                QMainWindow {{
+                    background-color: #2e2e2e;
+                    color: white;
+                }}
+                QLabel, QTextEdit, QPushButton, QLineEdit {{
+                    background-color: #2e2e2e;
+                    color: white;
+                    border: 1px solid #444;
+                }}
+                QMenuBar {{
+                    background-color: #2e2e2e;
+                    color: white;
+                }}
+                QMenuBar::item {{
+                    background-color: #2e2e2e;
+                    color: white;
+                }}
+                QMenuBar::item:selected {{
+                    background-color: #444;
+                }}
+                QMenu {{
+                    background-color: #2e2e2e;
+                    color: white;
+                }}
+                QMenu::item:selected {{
+                    background-color: #444;
+                }}
+                QDialog {{
+                    background-color: #2e2e2e;
+                    color: white;
+                }}
+                QDialog QLabel, QDialog QPushButton, QDialog QLineEdit {{
+                    background-color: #2e2e2e;
+                    color: white;
+                    border: 1px solid #444;
+                }}
+                * {{
+                    font-size: {size}px;
+                }}
+            """)
+        else:
+            self.setStyleSheet(f"""
+                QMainWindow {{
+                    background-color: white;
+                    color: black;
+                }}
+                QLabel, QTextEdit, QPushButton {{
+                    background-color: white;
+                    color: black;
+                }}
+                * {{
+                    font-size: {size}px;
+                }}
+            """)
+
